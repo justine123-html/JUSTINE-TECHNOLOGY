@@ -5036,6 +5036,93 @@
                 Utils.showNotification('Welcome to ElectroHub! Browse our latest electronics collection.');
             }, 1000);
         }
+        document.getElementById("registerBtn").addEventListener("click", function () {
+
+    const name = document.getElementById("registerName").value;
+    const email = document.getElementById("registerEmail").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirm = document.getElementById("registerConfirmPassword").value;
+
+    if (!name || !email || !password || !confirm) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    if (password !== confirm) {
+        alert("Passwords do not match");
+        return;
+    }
+
+    fetch("api/register.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            email: email,
+            password: password
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+
+        if (data.status === "success") {
+            document.getElementById("registerForm").reset();
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Registration failed");
+    });
+});
+const registerBtn = document.getElementById('registerBtn');
+
+registerBtn.addEventListener('click', () => {
+    // Grab values
+    const fullName = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+    if (!fullName || !email || !password || !confirmPassword) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+    }
+
+    // Split fullName into first_name and last_name (simple split)
+    const names = fullName.split(" ");
+    const first_name = names[0];
+    const last_name = names.slice(1).join(" ") || "";
+
+    // Create JSON data
+    const data = {
+        username: email.split("@")[0], // simple username
+        email: email,
+        password: password,
+        first_name: first_name,
+        last_name: last_name
+    };
+
+    // Send to backend
+    fetch('api/register.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => alert(res.message))
+    .catch(err => console.error(err));
+});
+
 
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
