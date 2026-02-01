@@ -4567,6 +4567,26 @@ function init() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
+       // Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        // Hapa ndio tunaita API service login
+        const result = await ApiService.login({ email, password });
+        console.log(result.user); // hii ni user kutoka database
+
+        // Update UI
+        document.getElementById("userStatus").innerText = `Hi, ${result.user.name}`;
+        alert("Login successful!");
+    } catch (err) {
+        console.error(err);
+        alert(err.message || "Login failed");
+    }
+});
+
 </script>
 </body>
 </html>
