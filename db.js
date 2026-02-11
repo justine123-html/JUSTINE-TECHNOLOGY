@@ -29,13 +29,14 @@ const db = mysql.createConnection({
   database: 'electronhub'
 });
 
-db.connect(err => {
+db.getConnection((err, connection) => {
   if (err) {
-    console.error('❌ MySQL connection error:', err);
-    return;
+    console.error('❌ MySQL connection error:', err.message);
+  } else {
+    console.log('✅ MySQL connected successfully');
+    connection.release();
   }
   console.log('✅ MySQL connected successfully');
-7cc7d24 (Initial commit)
 });
 
 module.exports = db;
