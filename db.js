@@ -1,3 +1,4 @@
+
 const mysql = require('mysql2');
 require('dotenv').config();
 
@@ -19,6 +20,22 @@ db.getConnection((err, connection) => {
     console.log('✅ MySQL connected successfully');
     connection.release();
   }
+
+const mysql = require('mysql');
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'root123',
+  database: 'electronhub'
+});
+
+db.connect(err => {
+  if (err) {
+    console.error('❌ MySQL connection error:', err);
+    return;
+  }
+  console.log('✅ MySQL connected successfully');
+7cc7d24 (Initial commit)
 });
 
 module.exports = db;
