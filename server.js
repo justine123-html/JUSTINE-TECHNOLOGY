@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -10,9 +9,7 @@ require('dotenv').config();
 
 const app = express();
 
-/* =======================
-   MIDDLEWARE
-======================= */
+
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -21,14 +18,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* =======================
-   STATIC FRONTEND
-======================= */
 app.use(express.static(path.join(__dirname, "public")));
-=======
-
-=======
->>>>>>> f343de0 (Initial commit)
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
