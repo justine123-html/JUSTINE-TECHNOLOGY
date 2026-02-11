@@ -6033,49 +6033,206 @@ const AdminManager = {
         }
     },
     
-    async loadUsersData(page = 1) {
+async loadUsersData() {
+    try {
+        console.log('🔄 Loading users from database...');
+        
+        const usersTable = document.getElementById('usersTable');
+        if (!usersTable) {
+            console.error('❌ Users table not found');
+            return;
+        }
+        
+        // Show loading
+        usersTable.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Loading users from database...</p>
+                </td>
+            </tr>
+        `;
+        
+        // Try to fetch from API
+        let response;
+        let users = [];
+        
         try {
-            // Mock users data for demo
-            const mockUsers = [
-                { id: 1, name: 'Admin User', email: 'admin@justinetech.com', role: 'admin', createdAt: '2023-01-15', orderCount: 12 },
-                { id: 2, name: 'John Doe', email: 'john@example.com', role: 'user', createdAt: '2023-06-22', orderCount: 5 },
-                { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'user', createdAt: '2023-08-30', orderCount: 8 },
-                { id: 4, name: 'Tech Vendor', email: 'vendor@tech.com', role: 'vendor', createdAt: '2023-11-05', orderCount: 3 }
-            ];
+            // Try endpoint 1
+            response = await fetch('http://localhost:3000/admin/users');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
             
-            const usersTable = document.getElementById('usersTable');
-            usersTable.innerHTML = mockUsers.map(user => `
+            const data = await response.json();
+            console.log('📊 API Response:', data);
+            
+            if (data.success && data.users) {
+                users = data.users;
+            } else if (data.users) {
+                users = data.users;
+            } else if (Array.isArray(data)) {
+                users = data;
+            }
+            
+        } catch (error1) {
+            console.log('First endpoint failed:', error1);
+            
+            try {
+                // Try endpoint 2
+                response = await fetch('http://localhost:3000/api/admin/users');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 API Response (alternate):', data);
+                
+                if (data.success && data.users) {
+                    users = data.users;
+                } else if (data.users) {
+                    users = data.users;
+                }
+                
+            } catch (error2) {
+                console.log('Both endpoints failed:', error2);
+                
+                // Show error
+                usersTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #ef4444;">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                            <h4>Cannot Connect to Server</h4>
+                            <p>Server is not responding. Please check:</p>
+                            <ol style="text-align: left; max-width: 300px; margin: 10px auto;">
+                                <li>Is Node.js server running?</li>
+                                <li>Is MySQL server running?</li>
+                                <li>Check console for errors</li>
+                            </ol>
+                            <button class="btn btn-primary mt-3" onclick="testServerConnection()">
+                                Test Connection
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+        }
+        
+        // Display users
+        if (users.length === 0) {
+            usersTable.innerHTML = `
                 <tr>
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>
-                        <span class="user-role role-${user.role}">
-                            ${user.role}
-                        </span>
-                    </td>
-                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td>${user.orderCount}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-icon btn-edit" onclick="AdminManager.editUser(${user.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-icon btn-delete" onclick="AdminManager.deleteUser(${user.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                        <i class="fas fa-users fa-2x mb-3"></i>
+                        <h4>No Users Found</h4>
+                        <p>Your database users table is empty.</p>
+                        <button class="btn btn-primary mt-2" onclick="AdminManager.showUserForm()">
+                            <i class="fas fa-plus"></i> Add First User
+                        </button>
                     </td>
                 </tr>
-            `).join('');
-            
-            // Update pagination
-            this.updatePagination('usersPagination', page, 1);
-            
-        } catch (error) {
-            console.error('Error loading users:', error);
+            `;
+            return;
         }
-    },
+        
+        // Build table
+        let html = '';
+        users.forEach(user => {
+            // Format date
+            let joinDate = 'N/A';
+            if (user.created_at) {
+                try {
+                    const date = new Date(user.created_at);
+                    joinDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    joinDate = user.created_at;
+                }
+            }
+            
+            // Role badge styling
+            let roleStyle = '';
+            if (user.role === 'admin') {
+                roleStyle = 'background: #ff6b35; color: white;';
+            } else if (user.role === 'vendor') {
+                roleStyle = 'background: #2ecc71; color: white;';
+            } else {
+                roleStyle = 'background: #4a90e2; color: white;';
+            }
+            
+            html += `
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${user.id}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; 
+                                      background: #f3f4f6; display: flex; align-items: center; 
+                                      justify-content: center; font-weight: bold;">
+                                ${user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${user.name || 'Unknown User'}</div>
+                                <div style="font-size: 12px; color: #6b7280;">ID: ${user.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${user.email || 'N/A'}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                        <span style="padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; ${roleStyle}">
+                            ${user.role || 'user'}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${joinDate}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                        <span style="padding: 4px 8px; background: #f3f4f6; border-radius: 4px;">
+                            ${user.orders_count || 0}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                        <button class="btn btn-sm" onclick="AdminManager.editUser(${user.id})" 
+                                style="padding: 4px 8px; background: #eff6ff; border: 1px solid #3b82f6; 
+                                       color: #3b82f6; border-radius: 4px; cursor: pointer;">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        usersTable.innerHTML = html;
+        
+        // Show success notification
+        if (typeof Utils !== 'undefined' && Utils.showNotification) {
+            Utils.showNotification(`Loaded ${users.length} users from database`, 'success');
+        }
+        
+        console.log(`✅ Successfully loaded ${users.length} users`);
+        
+    } catch (error) {
+        console.error('❌ Error in loadUsersData:', error);
+        
+        const usersTable = document.getElementById('usersTable');
+        if (usersTable) {
+            usersTable.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h4>Error Loading Users</h4>
+                        <p>${error.message || 'Unknown error occurred'}</p>
+                        <button class="btn btn-primary mt-2" onclick="AdminManager.loadUsersData()">
+                            Try Again
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+},
+
     
     async loadRecentOrders() {
         try {
